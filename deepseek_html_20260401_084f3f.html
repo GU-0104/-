@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>猫王福利站 - 卡密验证</title>
+    <style>
+        * { margin:0; padding:0; box-sizing:border-box; font-family:system-ui; }
+        body { min-height:100vh; background: linear-gradient(135deg, #1e1b2f 0%, #2a1e3c 100%); display:flex; align-items:center; justify-content:center; padding:1.5rem; }
+        .card { background:rgba(30,27,47,0.9); backdrop-filter:blur(10px); border-radius:2rem; padding:2rem; max-width:480px; width:100%; border:1px solid rgba(255,215,0,0.3); text-align:center; }
+        h1 { font-size:2rem; background:linear-gradient(135deg,#FFD966,#FFB347); -webkit-background-clip:text; background-clip:text; color:transparent; margin-bottom:0.5rem; }
+        .sub { color:#b9a9e6; margin-bottom:2rem; }
+        .input-group input { width:100%; padding:1rem; background:rgba(0,0,0,0.5); border:1px solid #4a3a6e; border-radius:2rem; color:#fff; outline:none; }
+        .btn { background:linear-gradient(105deg,#ffb347,#ff8c00); border:none; padding:0.9rem; width:100%; border-radius:2rem; font-weight:600; color:#1e1b2f; cursor:pointer; }
+        .message { margin-top:1.5rem; padding:0.8rem; border-radius:1rem; background:rgba(0,0,0,0.4); }
+        .error { color:#ff8a8a; border-left:3px solid #ff4444; }
+        .success { color:#a3e0a3; border-left:3px solid #44ff44; }
+        .footer { margin-top:1.5rem; font-size:0.75rem; color:#6a5a8e; }
+        .admin-link { color:#ffb347; text-decoration:none; font-size:0.8rem; }
+    </style>
+</head>
+<body>
+<div class="card">
+    <h1>🐱 猫王福利站</h1>
+    <div class="sub">请输入您的卡密，解锁专属福利</div>
+    <div class="input-group">
+        <input type="text" id="cardCode" placeholder="卡密" autocomplete="off">
+    </div>
+    <button class="btn" id="verifyBtn">验证并进入</button>
+    <div id="msg" class="message"></div>
+    <div class="footer">
+        <a href="admin.php" class="admin-link" target="_blank">🔐 管理员入口</a>
+    </div>
+</div>
+<script>
+    const API_URL = 'api.php';
+    async function verifyCard(code) {
+        const formData = new FormData();
+        formData.append('action', 'verify');
+        formData.append('code', code);
+        const res = await fetch(API_URL, { method: 'POST', body: formData });
+        return await res.json();
+    }
+    document.getElementById('verifyBtn').onclick = async () => {
+        const code = document.getElementById('cardCode').value.trim();
+        if (!code) { showMsg('请输入卡密', 'error'); return; }
+        const result = await verifyCard(code);
+        if (result.success) {
+            showMsg('✅ 验证成功！欢迎来到猫王福利站', 'success');
+            setTimeout(() => { window.location.href = result.redirect || 'https://www.baidu.com'; }, 1500);
+        } else {
+            showMsg('❌ ' + result.msg, 'error');
+            document.getElementById('cardCode').value = '';
+        }
+    };
+    function showMsg(text, type) {
+        const msgDiv = document.getElementById('msg');
+        msgDiv.innerHTML = `<div class="${type}">${text}</div>`;
+        setTimeout(() => msgDiv.innerHTML = '', 3000);
+    }
+</script>
+</body>
+</html>
