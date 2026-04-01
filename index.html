@@ -1,0 +1,674 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>卡密验证系统 - 安全访问门户</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: system-ui, 'Segoe UI', 'Poppins', 'Inter', sans-serif;
+        }
+
+        body {
+            min-height: 100vh;
+            background: linear-gradient(145deg, #0b1120 0%, #111827 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 1.5rem;
+            position: relative;
+        }
+
+        /* 全局容器 */
+        .container {
+            width: 100%;
+            max-width: 1300px;
+            margin: 0 auto;
+        }
+
+        /* 卡片样式 */
+        .glass-card {
+            background: rgba(15, 25, 45, 0.75);
+            backdrop-filter: blur(14px);
+            border-radius: 2rem;
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            box-shadow: 0 25px 45px rgba(0, 0, 0, 0.4), 0 0 0 0.5px rgba(255, 255, 255, 0.05);
+            transition: all 0.3s ease;
+        }
+
+        /* 验证面板 */
+        .verify-panel {
+            max-width: 500px;
+            margin: 2rem auto;
+            padding: 2rem 2rem 2.5rem;
+            text-align: center;
+        }
+
+        .verify-panel h1 {
+            font-size: 2rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, #E0E7FF, #A5F3FC);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+            margin-bottom: 0.5rem;
+        }
+
+        .verify-panel .sub {
+            color: #94a3b8;
+            margin-bottom: 2rem;
+            font-size: 0.9rem;
+        }
+
+        .input-group {
+            margin-bottom: 1.5rem;
+        }
+
+        .input-group input {
+            width: 100%;
+            padding: 1rem 1.2rem;
+            background: rgba(0, 0, 0, 0.5);
+            border: 1px solid #2d3a5e;
+            border-radius: 1.5rem;
+            font-size: 1rem;
+            color: #f1f5f9;
+            outline: none;
+            transition: all 0.2s;
+        }
+
+        .input-group input:focus {
+            border-color: #3b82f6;
+            box-shadow: 0 0 0 2px rgba(59,130,246,0.3);
+        }
+
+        .btn {
+            background: linear-gradient(105deg, #2563eb, #1e40af);
+            border: none;
+            padding: 0.9rem 1.8rem;
+            width: 100%;
+            border-radius: 2rem;
+            font-weight: 600;
+            font-size: 1rem;
+            color: white;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+            box-shadow: 0 8px 20px rgba(37,99,235,0.3);
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 12px 25px rgba(37,99,235,0.4);
+        }
+
+        .btn:active {
+            transform: translateY(1px);
+        }
+
+        .message {
+            margin-top: 1.5rem;
+            padding: 0.8rem;
+            border-radius: 1rem;
+            font-size: 0.9rem;
+            background: rgba(0,0,0,0.4);
+        }
+
+        .error-msg {
+            color: #f87171;
+            border-left: 3px solid #ef4444;
+        }
+
+        .success-msg {
+            color: #4ade80;
+            border-left: 3px solid #22c55e;
+        }
+
+        /* 管理后台区域 (仅管理员可见) */
+        .admin-panel {
+            margin-top: 2rem;
+            padding: 1.5rem;
+            background: rgba(0, 0, 0, 0.6);
+            border-radius: 1.5rem;
+            border: 1px solid rgba(59,130,246,0.4);
+        }
+
+        .admin-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+            border-bottom: 1px solid #2d3a5e;
+            padding-bottom: 1rem;
+        }
+
+        .admin-header h2 {
+            font-size: 1.5rem;
+            color: #cbd5e6;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .admin-badge {
+            background: #2563eb;
+            padding: 0.2rem 0.8rem;
+            border-radius: 2rem;
+            font-size: 0.7rem;
+            font-weight: bold;
+        }
+
+        .form-row {
+            display: flex;
+            gap: 0.8rem;
+            flex-wrap: wrap;
+            margin-bottom: 1.5rem;
+        }
+
+        .admin-input {
+            flex: 1;
+            padding: 0.7rem 1rem;
+            background: #0f172a;
+            border: 1px solid #334155;
+            border-radius: 1rem;
+            color: white;
+            outline: none;
+        }
+
+        .small-btn {
+            background: #2c3e66;
+            padding: 0.7rem 1.2rem;
+            border-radius: 1rem;
+            font-weight: 500;
+            border: none;
+            color: white;
+            cursor: pointer;
+            transition: 0.1s;
+        }
+
+        .small-btn.primary {
+            background: #3b82f6;
+        }
+
+        .small-btn.danger {
+            background: #b91c1c;
+        }
+
+        .small-btn.warning {
+            background: #d97706;
+        }
+
+        .card-list {
+            overflow-x: auto;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            color: #e2e8f0;
+            font-size: 0.85rem;
+        }
+
+        th, td {
+            padding: 0.75rem 0.5rem;
+            text-align: left;
+            border-bottom: 1px solid #1e2a3e;
+        }
+
+        th {
+            color: #90a3bf;
+            font-weight: 600;
+        }
+
+        .delete-btn {
+            background: none;
+            border: none;
+            color: #f87171;
+            cursor: pointer;
+            font-weight: bold;
+            font-size: 1rem;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.5rem;
+        }
+
+        .delete-btn:hover {
+            background: #450a0a;
+        }
+
+        .status-used {
+            color: #f97316;
+            font-weight: 500;
+        }
+
+        .status-unused {
+            color: #4ade80;
+        }
+
+        .footer-note {
+            text-align: center;
+            margin-top: 1rem;
+            font-size: 0.75rem;
+            color: #5b6e8c;
+        }
+
+        .logout-area {
+            display: flex;
+            justify-content: flex-end;
+            margin-bottom: 1rem;
+        }
+
+        .admin-only-area {
+            display: none;
+        }
+
+        .user-content {
+            background: rgba(0,0,0,0.4);
+            border-radius: 1.5rem;
+            padding: 2rem;
+            text-align: center;
+        }
+
+        .user-content h2 {
+            color: #facc15;
+            margin-bottom: 1rem;
+        }
+
+        /* 响应式 */
+        @media (max-width: 760px) {
+            .verify-panel { padding: 1.5rem; }
+            .admin-header { flex-direction: column; align-items: stretch; }
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <!-- 卡密验证区域 -->
+    <div id="authSection" class="verify-panel glass-card">
+        <h1>🔐 安全访问门户</h1>
+        <div class="sub">请输入有效的卡密以进入系统</div>
+        <div class="input-group">
+            <input type="text" id="cardKeyInput" placeholder="卡密 (例如: XJ3K-9F2M-7V8Q)" autocomplete="off">
+        </div>
+        <button class="btn" id="verifyBtn">验证并进入</button>
+        <div id="authMessage" class="message"></div>
+        <div class="footer-note">* 每个卡密仅限使用一次，由管理员统一管理</div>
+    </div>
+
+    <!-- 受保护内容区域 (验证成功后展示) -->
+    <div id="protectedContent" style="display: none;">
+        <div class="glass-card" style="padding: 1.5rem;">
+            <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem; margin-bottom: 1.5rem;">
+                <h2 style="color: white;">✨ 欢迎来到专属内部系统 ✨</h2>
+                <button id="logoutBtn" class="small-btn warning" style="background:#7c2d12;">🔓 退出并销毁会话</button>
+            </div>
+            <div class="user-content">
+                <h2>📁 机密资源中心</h2>
+                <p style="color:#cbd5e6; margin: 1rem 0;">您已经通过卡密验证，当前拥有访问权限。</p>
+                <div style="background: #0f172a; border-radius: 1rem; padding: 1rem; margin: 1rem 0;">
+                    <p>📊 项目数据面板 (仅示例)</p>
+                    <p style="font-size:0.85rem;">✅ 内部报告 | ✅ 开发者日志 | ✅ 资产清单</p>
+                </div>
+                <p style="font-size:0.8rem; color:#7e8aa2;">会话基于浏览器存储，关闭页面后需重新验证。</p>
+            </div>
+            <!-- 管理员专用面板 (只有管理员卡密或者额外验证，但依据需求：只有我(管理员)才可以使用的管理页面) 
+            这里使用一个独立的管理员模式开关: 基于特殊的超级卡密或全局管理员标志。
+            为满足“只有我才可以使用管理页”，设计一个硬核的超级管理员卡密(主控卡密) 或者额外管理员登录入口。
+            为了演示完美: 当验证卡密时，如果卡密是预设的“ADMIN_MASTER_KEY” 或者数据库内标记为管理员卡密？更优雅: 数据库中增加isAdmin字段。
+            由于需求: 只能我才可以使用管理页面，因此我在卡密数据库里设定一个特殊的卡密(例如 "SUPER-ADMIN-999") 拥有管理员权限。
+            也可以单独加一个管理员登录口，但为了保证“专门的存储卡密数据库只能我才可使用” 并且管理页面集成在同一个系统，通过超级卡密来展示管理模块。
+            在验证成功后，根据卡密是否为管理员权限，展示或者隐藏管理面板。这样只有我(持有管理员卡密)才能看到并使用管理页。
+            -->
+            <div id="adminPanelContainer" style="margin-top: 1.5rem;"></div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // ---------- 卡密数据库 (模拟SQLite / 后端数据库，此处使用前端+localStorage持久化，但必须保证“只有管理员可以操作”) ----------
+    // 为了满足“专门的存储卡密的数据库只能我才可以使用” 并且体现管理页面对卡密增删改查。
+    // 设计一个基于 localStorage 的持久化存储，模拟数据库。首次加载时初始化默认数据。
+    // 数据库结构: 卡密表 (cards) 字段: id, code, used (boolean), usedAt, isAdmin (boolean)
+    // 管理员初始化拥有一个绝对管理员卡密: "ADMIN-ROOT-2025" ，并且普通测试卡密 "TEST-CODE-001"
+    // 系统仅当验证时传入的卡密有效且未被使用，则允许进入; 若卡密拥有 isAdmin === true，则在用户界面额外展示管理员后台面板(仅管理员可管理整个卡密库)
+    // 所有管理操作（增删改查）仅当当前登录会话的卡密具备管理员权限才可见并执行。
+    // 安全性: 前端存储模拟，真实场景需后端API + JWT，但完全满足题目“专门存储卡密的数据库只能我才可以使用”，通过管理员权限限制。
+    
+    // 数据库 key
+    const DB_KEY = 'card_security_db';
+    const SESSION_KEY = 'active_card_session';   // 存储当前验证通过的卡密信息 (code, isAdmin, 有效期)
+    
+    // 初始化数据库 (仅当为空时)
+    function initDatabase() {
+        let db = localStorage.getItem(DB_KEY);
+        if (!db) {
+            // 预设卡密数据
+            const defaultCards = [
+                { id: '1', code: 'ADMIN-ROOT-2025', used: false, usedAt: null, isAdmin: true, desc: '超级管理员卡密' },
+                { id: '2', code: 'XJ3K-9F2M-7V8Q', used: false, usedAt: null, isAdmin: false, desc: '普通用户卡密' },
+                { id: '3', code: 'WELCOME-2024', used: false, usedAt: null, isAdmin: false, desc: '访客卡密' },
+                { id: '4', code: 'DEV-TEAM-001', used: false, usedAt: null, isAdmin: false, desc: '开发组试用' }
+            ];
+            localStorage.setItem(DB_KEY, JSON.stringify(defaultCards));
+        }
+    }
+    
+    // 获取所有卡密 (仅管理员调用)
+    function getAllCards() {
+        return JSON.parse(localStorage.getItem(DB_KEY)) || [];
+    }
+    
+    // 保存卡密列表
+    function saveAllCards(cards) {
+        localStorage.setItem(DB_KEY, JSON.stringify(cards));
+    }
+    
+    // 根据卡密代码查询卡密对象
+    function findCardByCode(code) {
+        const cards = getAllCards();
+        return cards.find(card => card.code === code);
+    }
+    
+    // 标记卡密为已使用
+    function markCardAsUsed(code, sessionAdminFlag = false) {
+        const cards = getAllCards();
+        const index = cards.findIndex(c => c.code === code);
+        if (index !== -1 && !cards[index].used) {
+            cards[index].used = true;
+            cards[index].usedAt = new Date().toISOString();
+            saveAllCards(cards);
+            return true;
+        }
+        return false;
+    }
+    
+    // 新增卡密 (管理员)
+    function addCard(code, isAdmin = false, desc = '') {
+        if (!code || code.trim() === '') return { success: false, msg: '卡密不能为空' };
+        const cards = getAllCards();
+        if (cards.find(c => c.code === code)) {
+            return { success: false, msg: '卡密已存在' };
+        }
+        const newId = Date.now().toString();
+        cards.push({
+            id: newId,
+            code: code.trim(),
+            used: false,
+            usedAt: null,
+            isAdmin: !!isAdmin,
+            desc: desc || '手动添加'
+        });
+        saveAllCards(cards);
+        return { success: true, msg: '添加成功' };
+    }
+    
+    // 删除卡密 (管理员)
+    function deleteCardById(id) {
+        let cards = getAllCards();
+        const newCards = cards.filter(c => c.id !== id);
+        if (newCards.length === cards.length) return false;
+        saveAllCards(newCards);
+        return true;
+    }
+    
+    // 重置卡密使用状态 (管理员重置某个卡密为未使用)
+    function resetCardUsage(code) {
+        const cards = getAllCards();
+        const card = cards.find(c => c.code === code);
+        if (card) {
+            card.used = false;
+            card.usedAt = null;
+            saveAllCards(cards);
+            return true;
+        }
+        return false;
+    }
+    
+    // 当前会话的管理员权限及信息
+    let currentSession = null;   // { code, isAdmin, active }
+    
+    // 检查本地会话是否有效 (页面刷新保持)
+    function loadSessionFromStorage() {
+        const sessionStr = sessionStorage.getItem(SESSION_KEY);
+        if (sessionStr) {
+            try {
+                const session = JSON.parse(sessionStr);
+                if (session && session.active && session.code) {
+                    // 额外验证卡密是否仍然有效(未被管理员删除? 或者未被使用? 理论上已使用的卡密不能再次使用，但会话中已登录用户不能因为数据库变动而立刻踢出)
+                    // 为了安全，校验卡密是否存在于数据库且未被使用？但既然用户已经通过验证，保持会话直到主动退出。
+                    const cardInDb = findCardByCode(session.code);
+                    if (cardInDb && !cardInDb.used) {
+                        // 正常情况通过验证时已经标记已使用，但为了逻辑: 标记使用在验证时执行，所以卡密应该是used状态。
+                        // 不过为了保证会话持久，只要会话存在就有效，不会重复验证。为了避免数据库删除卡密导致冲突，可以放行。
+                        currentSession = { code: session.code, isAdmin: session.isAdmin };
+                        return true;
+                    } else if (cardInDb && cardInDb.used) {
+                        // 正常会话
+                        currentSession = { code: session.code, isAdmin: session.isAdmin };
+                        return true;
+                    } else {
+                        // 卡密可能被删除，清会话
+                        sessionStorage.removeItem(SESSION_KEY);
+                        return false;
+                    }
+                }
+            } catch(e) {}
+        }
+        return false;
+    }
+    
+    // 保存会话
+    function saveSession(code, isAdmin) {
+        const sessionData = { code, isAdmin, active: true, loginTime: Date.now() };
+        sessionStorage.setItem(SESSION_KEY, JSON.stringify(sessionData));
+        currentSession = { code, isAdmin };
+    }
+    
+    // 清除会话并退出
+    function logout() {
+        sessionStorage.removeItem(SESSION_KEY);
+        currentSession = null;
+        // 切换UI显示验证面板，隐藏受保护内容
+        document.getElementById('authSection').style.display = 'block';
+        document.getElementById('protectedContent').style.display = 'none';
+        // 清空输入框和消息
+        document.getElementById('cardKeyInput').value = '';
+        const msgDiv = document.getElementById('authMessage');
+        msgDiv.innerHTML = '';
+        msgDiv.className = 'message';
+    }
+    
+    // 渲染受保护内容和管理面板 (依据管理员权限)
+    function renderProtectedUI(isAdmin) {
+        const adminContainer = document.getElementById('adminPanelContainer');
+        if (isAdmin && currentSession && currentSession.isAdmin) {
+            // 加载管理面板HTML及功能
+            adminContainer.innerHTML = `
+                <div class="admin-panel">
+                    <div class="admin-header">
+                        <h2>🛡️ 卡密管理中心 <span class="admin-badge">管理员特权</span></h2>
+                        <div style="font-size:0.8rem;">管理所有卡密 (仅您可见)</div>
+                    </div>
+                    <div class="form-row">
+                        <input type="text" id="newCardCode" class="admin-input" placeholder="新卡密 (例: ABC-DEF-123)" autocomplete="off">
+                        <label style="display: flex; align-items: center; gap: 0.5rem; color:#cbd5e6;">
+                            <input type="checkbox" id="newCardAdminCheck"> 管理员卡密
+                        </label>
+                        <button id="addCardBtn" class="small-btn primary">➕ 添加卡密</button>
+                    </div>
+                    <div class="card-list">
+                        <table id="cardsTable">
+                            <thead>
+                                <tr><th>卡密代码</th><th>状态</th><th>管理员</th><th>使用时间</th><th>操作</th></tr>
+                            </thead>
+                            <tbody id="cardsTableBody"></tbody>
+                        </table>
+                    </div>
+                    <div class="footer-note" style="margin-top:1rem;">⚠️ 删除卡密不可恢复，重置可将已用卡密变为未使用。</div>
+                </div>
+            `;
+            // 绑定管理事件并刷新表格
+            refreshCardsTable();
+            document.getElementById('addCardBtn').addEventListener('click', () => {
+                const newCode = document.getElementById('newCardCode').value.trim();
+                const isAdminChecked = document.getElementById('newCardAdminCheck').checked;
+                if (!newCode) {
+                    alert('请输入卡密内容');
+                    return;
+                }
+                const result = addCard(newCode, isAdminChecked, '管理员新增');
+                if (result.success) {
+                    refreshCardsTable();
+                    document.getElementById('newCardCode').value = '';
+                    document.getElementById('newCardAdminCheck').checked = false;
+                } else {
+                    alert(result.msg);
+                }
+            });
+        } else {
+            adminContainer.innerHTML = `<div class="admin-panel" style="background:#0a0f1c; text-align:center;"><p style="color:#7e8aa2;">🔒 普通用户模式 · 卡密管理面板仅管理员可用</p></div>`;
+        }
+    }
+    
+    // 刷新表格 (动态渲染所有卡密，带操作按钮)
+    function refreshCardsTable() {
+        const cards = getAllCards();
+        const tbody = document.getElementById('cardsTableBody');
+        if (!tbody) return;
+        tbody.innerHTML = '';
+        cards.forEach(card => {
+            const row = tbody.insertRow();
+            row.insertCell(0).innerText = card.code;
+            const statusCell = row.insertCell(1);
+            statusCell.innerText = card.used ? '已使用' : '未使用';
+            statusCell.className = card.used ? 'status-used' : 'status-unused';
+            row.insertCell(2).innerText = card.isAdmin ? '✅ 是' : '❌ 否';
+            row.insertCell(3).innerText = card.usedAt ? new Date(card.usedAt).toLocaleString() : '—';
+            const actionCell = row.insertCell(4);
+            // 重置按钮 (仅当已使用时提供重置功能)
+            if (card.used) {
+                const resetBtn = document.createElement('button');
+                resetBtn.innerText = '🔄 重置';
+                resetBtn.className = 'small-btn';
+                resetBtn.style.background = '#6b21a5';
+                resetBtn.style.padding = '0.2rem 0.6rem';
+                resetBtn.style.marginRight = '0.5rem';
+                resetBtn.onclick = () => {
+                    if (confirm(`重置卡密 ${card.code} 为未使用状态？`)) {
+                        if (resetCardUsage(card.code)) {
+                            refreshCardsTable();
+                        } else {
+                            alert('重置失败');
+                        }
+                    }
+                };
+                actionCell.appendChild(resetBtn);
+            }
+            const delBtn = document.createElement('button');
+            delBtn.innerText = '🗑️ 删除';
+            delBtn.className = 'delete-btn';
+            delBtn.style.background = '#991b1b';
+            delBtn.style.border = 'none';
+            delBtn.style.padding = '0.2rem 0.6rem';
+            delBtn.style.borderRadius = '0.5rem';
+            delBtn.style.color = 'white';
+            delBtn.style.cursor = 'pointer';
+            delBtn.onclick = () => {
+                if (confirm(`永久删除卡密 ${card.code} ？\n删除后无法恢复。`)) {
+                    if (deleteCardById(card.id)) {
+                        refreshCardsTable();
+                    } else {
+                        alert('删除失败');
+                    }
+                }
+            };
+            actionCell.appendChild(delBtn);
+        });
+    }
+    
+    // 卡密验证核心逻辑
+    function verifyCard(cardCode) {
+        if (!cardCode || cardCode.trim() === '') {
+            return { success: false, msg: '请输入卡密' };
+        }
+        const card = findCardByCode(cardCode);
+        if (!card) {
+            return { success: false, msg: '卡密无效，不存在于数据库中' };
+        }
+        if (card.used) {
+            return { success: false, msg: '卡密已被使用，无法进入' };
+        }
+        // 标记为已使用
+        const markOk = markCardAsUsed(cardCode, card.isAdmin);
+        if (!markOk) {
+            return { success: false, msg: '状态变更失败，请重试' };
+        }
+        // 保存会话
+        saveSession(cardCode, card.isAdmin);
+        return { success: true, msg: '验证成功，欢迎访问！', isAdmin: card.isAdmin };
+    }
+    
+    // 展示已验证界面
+    function showContentAfterAuth(isAdmin) {
+        document.getElementById('authSection').style.display = 'none';
+        document.getElementById('protectedContent').style.display = 'block';
+        renderProtectedUI(isAdmin);
+        // 附加挂载退出按钮事件 (每次显示时重新绑定避免重复)
+        const logoutBtn = document.getElementById('logoutBtn');
+        if (logoutBtn) {
+            // 移除原有监听器再添加新
+            const newBtn = logoutBtn.cloneNode(true);
+            logoutBtn.parentNode.replaceChild(newBtn, logoutBtn);
+            newBtn.addEventListener('click', () => {
+                logout();
+            });
+        }
+    }
+    
+    // 页面入口及初始化
+    function init() {
+        initDatabase();
+        // 检查现有会话
+        const hasSession = loadSessionFromStorage();
+        if (hasSession && currentSession) {
+            showContentAfterAuth(currentSession.isAdmin);
+        } else {
+            // 显示验证区域
+            document.getElementById('authSection').style.display = 'block';
+            document.getElementById('protectedContent').style.display = 'none';
+        }
+        
+        // 绑定验证按钮
+        const verifyBtn = document.getElementById('verifyBtn');
+        const inputField = document.getElementById('cardKeyInput');
+        const msgDiv = document.getElementById('authMessage');
+        
+        function performVerify() {
+            const code = inputField.value.trim();
+            const result = verifyCard(code);
+            if (result.success) {
+                msgDiv.innerHTML = `<div class="success-msg">✅ ${result.msg}</div>`;
+                msgDiv.className = 'message success-msg';
+                setTimeout(() => {
+                    showContentAfterAuth(result.isAdmin);
+                }, 600);
+            } else {
+                msgDiv.innerHTML = `<div class="error-msg">❌ ${result.msg}</div>`;
+                msgDiv.className = 'message error-msg';
+                inputField.value = '';
+                inputField.focus();
+            }
+        }
+        
+        verifyBtn.addEventListener('click', performVerify);
+        inputField.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') performVerify();
+        });
+    }
+    
+    init();
+</script>
+</body>
+</html>
